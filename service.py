@@ -37,9 +37,9 @@ class FBAutomator:
             return path
         except: return None
 
-    def log_to_excel(self, name, pwd, url, 2fa_key):
+    def log_to_excel(self, name, pwd, url, two_fa_key):
         uid = re.search(r'id=(\d+)', url).group(1) if "id=" in url else "N/A"
-        data = {"Name": [name], "Pass": [pwd], "UID": [uid], "2FA": [2fa_key]}
+        data = {"Name": [name], "Pass": [pwd], "UID": [uid], "2FA": [two_fa_key]}
         df = pd.DataFrame(data)
         if os.path.exists(self.excel_path):
             pd.concat([pd.read_excel(self.excel_path), df]).to_excel(self.excel_path, index=False)
