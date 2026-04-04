@@ -22,7 +22,7 @@ class ItachiConsoleApp(App):
         
         # Logo Image
         if os.path.exists('itachi_logo.png'):
-            self.logo = Image(source='itachi_logo.png', size_hint=(1, 0.3))
+            self.logo = Image(source='itachi_logo.png', size_hint=(1, 0.4), allow_stretch=True, keep_ratio=True)
             self.layout.add_widget(self.logo)
         
         # Title Label
@@ -41,9 +41,9 @@ class ItachiConsoleApp(App):
             markup=True,
             valign='top',
             halign='left',
-            size_hint_y=None,
-            font_name='Roboto'
+            size_hint_y=None
         )
+        self.console_label.bind(width=lambda *x: self.console_label.setter('text_size')(self.console_label, (self.console_label.width, None)))
         self.console_label.bind(texture_size=self.console_label.setter('size'))
         self.scroll.add_widget(self.console_label)
         self.layout.add_widget(self.scroll)
