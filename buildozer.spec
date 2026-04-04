@@ -12,8 +12,8 @@ source.include_exts = py,png,jpg,kv,atlas
 # (section 3) Versioning
 version = 0.1
 
-# (section 4) Requirements (BS4, Requests, Pandas add kar diye hain)
-requirements = python3, kivy, requests, beautifulsoup4, pandas, openpyxl
+# (section 4) Requirements (Removed Pandas and openpyxl, using vanilla csv)
+requirements = python3, kivy, requests, beautifulsoup4
 
 # (section 5) Orientation and Permissions
 orientation = portrait

@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import os
-import pandas as pd
+import csv
 import time
 import re
 
@@ -90,7 +90,7 @@ class ItachiBot:
             
             self.log("Request intercepted successfully (Demo/Test Mode).")
             self.save_data(first_name + " " + last_name, email, password)
-            self.log("Target data secured to /sdcard/Download/ITACHI_Database.xlsx")
+            self.log("Target data secured to /sdcard/Download/ITACHI_Database.csv")
             
         except Exception as e:
             self.log(f"[color=ff0000]CRITICAL ERROR: {str(e)}[/color]")
@@ -100,20 +100,19 @@ class ItachiBot:
 
     def save_data(self, name, email, password):
         try:
-            data = {"Name": [name], "Email": [email], "Pass": [password]}
-            df = pd.DataFrame(data)
-            
             # Note: During desktop testing, /sdcard/ might not exist.
             # Handle graceful fallback
             save_dir = "/sdcard/Download/"
             if not os.path.exists(save_dir):
                 save_dir = "" # Save in current directory for desktop
                 
-            path = os.path.join(save_dir, "ITACHI_Database.xlsx")
+            path = os.path.join(save_dir, "ITACHI_Database.csv")
             
-            if os.path.exists(path):
-                pd.concat([pd.read_excel(path), df]).to_excel(path, index=False)
-            else: 
-                df.to_excel(path, index=False)
+            file_exists = os.path.isfile(path)
+            with open(path, mode='a', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                if not file_exists:
+                    writer.writerow(["Name", "Email", "Password"])
+                writer.writerow([name, email, password])
         except Exception as e:
-            self.log(f"Could not save Excel: {str(e)}")
+            self.log(f"Could not save CSV: {str(e)}")
