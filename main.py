@@ -1,55 +1,47 @@
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.scrollview import ScrollView
-from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
-from kivy.clock import Clock
+from kivy.uix.label import Label
 from itachi_bot import ItachiBot
 import threading
 
-class ItachiInterface(BoxLayout):
+class ItachiUI(BoxLayout):
     def __init__(self, **kwargs):
-        super().__init__(orientation='vertical', padding=10, spacing=10, **kwargs)
-        
-        # Log Display Window
-        self.log_display = Label(
-            text="[b]ITACHI FB TOOL v1.0[/b]\nReady for Build...",
-            markup=True,
-            size_hint_y=None,
-            halign='left',
-            valign='top'
-        )
-        self.log_display.bind(texture_size=self.log_display.setter('size'))
-        
-        scroll = ScrollView(size_hint=(1, 0.8))
-        scroll.add_widget(self.log_display)
-        self.add_widget(scroll)
-        
-        # Start Button
-        self.btn = Button(text="START AUTOMATION", size_hint=(1, 0.2), background_color=(0, 1, 0, 1))
-        self.btn.bind(on_press=self.start_process)
-        self.add_widget(self.btn)
+        super().__init__(orientation='vertical', padding=15, spacing=10, **kwargs)
+        self.bot = ItachiBot(self.update_log)
 
-    def update_log(self, message):
-        Clock.schedule_once(lambda dt: self._append_text(message))
+        self.add_widget(Label(text="[b]ITACHI SEMI-AUTO REG[/b]", markup=True, size_hint_y=0.1))
 
-    def _append_text(self, message):
-        self.log_display.text += f"\n> {message}"
+        # Input: Phone Number
+        self.phone_in = TextInput(text="+91", multiline=False, hint_text="Country Code + Number")
+        self.add_widget(self.phone_in)
 
-    def start_process(self, instance):
-        self.btn.disabled = True
-        self.update_log("Thread Started...")
-        # TEST CREDENTIALS (Build se pehle badal lena)
-        bot = ItachiBot("YOUR_NUMBER", self.update_log, self.finish_task, None, "YOUR_PASS")
-        threading.Thread(target=bot.run_automation).start()
+        self.btn_reg = Button(text="1. START REGISTRATION", background_color=(0, 0.5, 1, 1))
+        self.btn_reg.bind(on_press=self.run_step1)
+        self.add_widget(self.btn_reg)
 
-    def finish_task(self):
-        self.btn.disabled = False
-        self.update_log("Process Finished.")
+        # Input: OTP
+        self.otp_in = TextInput(hint_text="Enter 5-digit OTP here", multiline=False)
+        self.add_widget(self.otp_in)
+
+        self.btn_otp = Button(text="2. CONFIRM OTP", background_color=(0, 0.8, 0, 1))
+        self.btn_otp.bind(on_press=self.run_step2)
+        self.add_widget(self.btn_otp)
+
+        self.logs = Label(text="Bot Status: Waiting...")
+        self.add_widget(self.logs)
+
+    def update_log(self, msg):
+        self.logs.text = msg
+
+    def run_step1(self, instance):
+        threading.Thread(target=lambda: self.bot.step_1_fill_form(self.phone_in.text)).start()
+
+    def run_step2(self, instance):
+        threading.Thread(target=lambda: self.bot.step_2_confirm_otp(self.otp_in.text)).start()
 
 class ItachiApp(App):
-    def build(self):
-        return ItachiInterface()
+    def build(self): return ItachiUI()
 
-if __name__ == "__main__":
-    ItachiApp().run()
+if __name__ == "__main__": ItachiApp().run()
