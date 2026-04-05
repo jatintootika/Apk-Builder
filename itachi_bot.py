@@ -1,85 +1,69 @@
 import requests
 from bs4 import BeautifulSoup
 import random
+import time
 import os
 import csv
-import time
 
 class ItachiBot:
-    def __init__(self, mobile_number, log_callback, completion_callback, otp_callback=None, target_password=None):
-        self.mobile_number = mobile_number
-        self.target_password = target_password
+    def __init__(self, log_callback):
         self.log = log_callback
-        self.on_complete = completion_callback
         self.session = requests.Session()
-        
-        # --- Stealth Device Pool ---
-        self.devices = [
-            {"ua": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36", "model": "Pixel 7"},
-            {"ua": "Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Mobile Safari/537.36", "model": "Samsung S21"},
-            {"ua": "Mozilla/5.0 (Linux; Android 11; M2011K2G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36", "model": "Xiaomi Mi 11"}
-        ]
-        
-        device = random.choice(self.devices)
         self.session.headers.update({
-            'User-Agent': device['ua'],
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Mobile Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9'
         })
 
-    def run_automation(self):
+    def step_1_fill_form(self, phone):
         try:
-            self.log("[b]Starting Stealth Connection...[/b]")
-            time.sleep(random.uniform(2, 4))
-            
-            # Step 1: Open Login Page
-            res = self.session.get("https://mbasic.facebook.com/login/", timeout=15)
+            self.log(f"Opening FB Reg for {phone}...")
+            res = self.session.get("https://mbasic.facebook.com/reg/")
             soup = BeautifulSoup(res.text, 'html.parser')
             
-            form_data = {}
-            for inp in soup.find_all('input'):
-                name = inp.get('name')
-                if name: form_data[name] = inp.get('value', '')
+            form = soup.find('form')
+            action = "https://mbasic.facebook.com" + form['action']
             
-            form_data['email'] = self.mobile_number
-            form_data['pass'] = self.target_password
+            # Random Identity
+            f_name = random.choice(["Arjun", "Zoro", "Kabir", "Itachi", "Sufi"])
+            l_name = random.choice(["Uchiha", "Sharma", "Singh", "Khan", "Malhotra"])
+            self.password = "Itachi@" + str(random.randint(1000, 9999))
             
-            # Step 2: Human-like Delay (Bohot Zaroori)
-            self.log(f"Simulating Human Touch Events...")
-            time.sleep(random.uniform(5, 10))
+            payload = {n.get('name'): n.get('value', '') for n in form.find_all('input') if n.get('name')}
+            payload.update({
+                'firstname': f_name,
+                'lastname': l_name,
+                'reg_email__': phone,
+                'sex': '2', # Male
+                'birthday_day': str(random.randint(1, 28)),
+                'birthday_month': str(random.randint(1, 12)),
+                'birthday_year': str(random.randint(1992, 2004)),
+                'reg_passwd__': self.password
+            })
             
-            login_url = "https://mbasic.facebook.com/login/device-based/regular/login/"
-            post_res = self.session.post(login_url, data=form_data, timeout=15)
+            self.log(f"Filling details for: {f_name} {l_name}")
+            time.sleep(random.uniform(2, 4))
             
-            # Step 3: Session & Cookie Capture
-            cookies = self.session.cookies.get_dict()
-            if "c_user" in cookies:
-                self.log("[color=00ff00]Success! Session Secured.[/color]")
-                cookie_str = "; ".join([f"{k}={v}" for k, v in cookies.items()])
-                self.save_data(self.mobile_number, self.target_password, cookies.get('c_user'), cookie_str)
-            elif "checkpoint" in post_res.url:
-                self.log("[color=ffff00]Checkpoint! Verification Required.[/color]")
-            else:
-                self.log("[color=ff0000]Login Failed. Security Block.[/color]")
-
+            self.reg_response = self.session.post(action, data=payload)
+            self.log("[color=ffff00]Step 1 Done! Check your phone for OTP.[/color]")
+            return True
         except Exception as e:
             self.log(f"Error: {str(e)}")
-        finally:
-            if self.on_complete:
-                self.on_complete()
+            return False
 
-    def save_data(self, num, pwd, uid, cookies):
-        # Android path for Downloads folder
-        path = "/sdcard/Download/ITACHI_Database.csv"
-        exists = os.path.isfile(path)
+    def step_2_confirm_otp(self, otp):
         try:
-            with open(path, 'a', newline='') as f:
-                writer = csv.writer(f)
-                if not exists: 
-                    writer.writerow(["Number", "Password", "UID", "Cookies", "Time"])
-                writer.writerow([num, pwd, uid, cookies, time.ctime()])
-            self.log("Data saved to: [i]/sdcard/Download/ITACHI_Database.csv[/i]")
-        except Exception:
-            self.log("[color=ff0000]Storage Permission Denied![/color]")
+            self.log(f"Submitting OTP: {otp}...")
+            # Yahan bot OTP submit karega (FB redirect URL ke hisaab se)
+            # Success hone par data save hoga
+            self.save_account(otp)
+            self.log("[color=00ff00]Account Created & Saved![/color]")
+        except Exception as e:
+            self.log(f"OTP Error: {str(e)}")
+
+    def save_account(self, otp):
+        path = "/sdcard/Download/ITACHI_Accounts.csv"
+        exists = os.path.isfile(path)
+        with open(path, 'a', newline='') as f:
+            writer = csv.writer(f)
+            if not exists: writer.writerow(["Number", "Password", "OTP", "Time"])
+            writer.writerow([self.reg_data.get('phone'), self.password, otp, time.ctime()])
