@@ -25,7 +25,7 @@ android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, M
 # (section 6) Android Versions
 android.api = 33
 android.minapi = 21
-android.ndk = 23b
+android.ndk = 25b
 android.ndk_api = 21
 
 # (section 7) Private Storage
