@@ -33,24 +33,37 @@ jobs:
           pip install --upgrade pip
           pip install buildozer "Cython<3.0.0" virtualenv
 
+      # 🔥 YEH HAI CACHE SYSTEM (Isse 429 Error kam hoga)
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v3
+        with:
+          path: ~/.buildozer
+          key: ${{ runner.os }}-buildozer-global-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            ${{ runner.os }}-buildozer-global-
+
+      - name: Cache Android SDK/NDK
+        uses: actions/cache@v3
+        with:
+          path: ~/.android
+          key: ${{ runner.os }}-android-sdk-${{ hashFiles('buildozer.spec') }}
+
       - name: Accept Android SDK License
         run: yes | sdkmanager --licenses || true
 
       - name: Build with Buildozer
         id: buildozer
         run: |
-          # 1. Purani kharab files ko delete karna
-          rm -rf .buildozer
-          rm -rf bin
+          # Agar adhoori file hai toh use hatao, baaki cache rehne do
+          rm -rf bin/
           
-          # 2. Nayi fresh build shuru karna
-          yes | buildozer android debug
+          # Build shuru karo, agar fail ho toh 1 baar retry karo
+          yes | buildozer android debug || (sleep 30 && yes | buildozer android debug)
           
-          # 3. APK ka rasta dhundna
           echo "APK_PATH=$(find bin -name '*.apk' | head -n 1)" >> $GITHUB_ENV
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Android-APK-Itachi-V2
+          name: Itachi-FB-Tool-V2
           path: ${{ env.APK_PATH }}
