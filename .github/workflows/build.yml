@@ -33,7 +33,6 @@ jobs:
           pip install --upgrade pip
           pip install buildozer "Cython<3.0.0" virtualenv
 
-      # 🔥 YEH HAI CACHE SYSTEM (Isse 429 Error kam hoga)
       - name: Cache Buildozer global directory
         uses: actions/cache@v3
         with:
@@ -54,12 +53,8 @@ jobs:
       - name: Build with Buildozer
         id: buildozer
         run: |
-          # Agar adhoori file hai toh use hatao, baaki cache rehne do
           rm -rf bin/
-          
-          # Build shuru karo, agar fail ho toh 1 baar retry karo
           yes | buildozer android debug || (sleep 30 && yes | buildozer android debug)
-          
           echo "APK_PATH=$(find bin -name '*.apk' | head -n 1)" >> $GITHUB_ENV
 
       - name: Upload APK
